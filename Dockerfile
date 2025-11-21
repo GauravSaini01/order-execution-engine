@@ -2,21 +2,22 @@ FROM node:20-alpine
 
 RUN apk add --no-cache bash postgresql redis
 
-WORKDIR /usr/src/app
+RUN adduser -D appuser
+USER appuser
+
+WORKDIR /home/appuser/app
 
 COPY package*.json ./
-
 RUN npm install
+RUN npm install --save-dev @types/node @types/pg @types/ws
 
 COPY . .
 
-RUN npm install --save-dev @types/node @types/pg @types/ws
-
 RUN npm run build
 
-COPY entrypoint.sh /usr/src/app/entrypoint.sh
-RUN chmod +x /usr/src/app/entrypoint.sh
+COPY entrypoint.sh /home/appuser/app/entrypoint.sh
+RUN chmod +x /home/appuser/app/entrypoint.sh
 
 EXPOSE 3000 6379 5432
 
-CMD ["/usr/src/app/entrypoint.sh"]
+CMD ["/home/appuser/app/entrypoint.sh"]
