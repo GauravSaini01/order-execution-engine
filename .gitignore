@@ -18,4 +18,4 @@ coverage/
 
 # 5. OS/IDE Files
 .DS_Store
-.vscode/
+.vscode
