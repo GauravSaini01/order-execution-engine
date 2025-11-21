@@ -13,7 +13,8 @@ This project implements a high-throughput, real-time order execution engine usin
 | Service | URL | Notes |
 | :--- | :--- | :--- |
 | **Frontend Dashboard** | [https://eterna-assignment-msr8ggbmr-gaurav-sainis-projects-8476e8e0.vercel.app](https://eterna-assignment-msr8ggbmr-gaurav-sainis-projects-8476e8e0.vercel.app) | Hosted on Vercel |
-| **Backend API Base** | [https://order-execution-engine-1.onrender.com/health](https://order-execution-engine-1.onrender.com/health) | Hosted on Render (Fastify Web Service) |
+| **Frontend Repo** | [https://github.com/GauravSaini01/frontend-eterna-assignment](https://github.com/GauravSaini01/frontend-eterna-assignment) | **Frontend Source Code** |
+| **Backend API Base** | [https://order-execution-engine-1.onrender.com/api](https://www.google.com/search?q=https://order-execution-engine-1.onrender.com/api) | Hosted on Render (Fastify Web Service) |
 
 -----
 
