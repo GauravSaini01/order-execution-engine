@@ -176,6 +176,3 @@ npm run test
 ### Concurrent Processing
 
 The `order-queue` is managed by BullMQ with a configured concurrency limit (default 10). Jobs failing during execution will be automatically retried up to **3 times** using an **exponential back-off** strategy before the final `failed` status is emitted.
-
-```
-```
