@@ -1,25 +1,26 @@
-import fastify from "fastify";
+import { createServer } from "./server";
+import { startOrderWorker } from "./workers/order.worker";
+import dotenv from "dotenv";
 
-const app = fastify();
+dotenv.config();
 
-app.get("/", async () => {
-  return { status: "Order Execution Engine Running" };
-});
+const port = Number(process.env.PORT || 3000);
 
-app.get("/health", async (_, reply) => {
-    return reply.send({ message : "Hello World",status: "OK", method: "GET" });
-});
+async function main() {
+  const server = await createServer(); 
+  
+  startOrderWorker(server.pg); 
 
-async function start() {
-  try {
-    await app.listen({ port: 3000 });
-    console.log("Server running on http://localhost:3000");
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
+  server.listen({ port }, (err, address) => {
+    if (err) {
+      server.log.error(err);
+      process.exit(1);
+    }
+    server.log.info(`Server listening at ${address}`);
+  });
 }
 
-start();
-
-export default app;
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
