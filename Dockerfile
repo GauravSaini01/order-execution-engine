@@ -5,9 +5,12 @@ RUN apk add --no-cache bash postgresql redis
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+
+RUN npm install
 
 COPY . .
+
+RUN npm install --save-dev @types/node @types/pg @types/ws
 
 RUN npm run build
 
