@@ -1,25 +1,32 @@
-FROM node:20-alpine
-
-RUN apk add --no-cache bash postgresql redis
+FROM node:20-alpine AS builder
 
 RUN adduser -D appuser
 
 WORKDIR /home/appuser/app
+RUN chown -R appuser:appuser /home/appuser/app
 
 COPY --chown=appuser:appuser package*.json ./
 
 USER appuser
 
-RUN npm install
-RUN npm install --save-dev @types/node @types/pg @types/ws
+RUN npm ci 
 
 COPY --chown=appuser:appuser . .
-
 RUN npm run build
 
-COPY --chown=appuser:appuser entrypoint.sh /home/appuser/app/entrypoint.sh
-RUN chmod +x /home/appuser/app/entrypoint.sh
+FROM node:20-alpine AS production
 
-EXPOSE 3000 6379 5432
+WORKDIR /home/appuser/app
 
-CMD ["/home/appuser/app/entrypoint.sh"]
+ENV NODE_ENV=production
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /home/appuser/app/dist ./dist
+
+USER appuser
+
+EXPOSE 3000
+
+CMD ["node", "dist/index.js"]
