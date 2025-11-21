@@ -12,15 +12,12 @@ import { Order } from "../models/order.model";
 import { DBClient } from "../repositories/db.interface";
 import { DexRouterService } from '../services/dex-router.service'; 
 
-const REDIS_CONNECTION = { 
-    host: process.env.REDIS_HOST || "127.0.0.1", 
-    port: Number(process.env.REDIS_PORT || 6379), 
-    maxRetriesPerRequest: null 
-};
+
+const redisUrl = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || "127.0.0.1"}:${process.env.REDIS_PORT || 6379}`;
+const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });
+
 const TEST_PORT = 4001;
 const TEST_QUEUE_NAME = "test-order-queue";
-
-const connection = new IORedis(REDIS_CONNECTION);
 
 vi.mock("../utils/sleep", () => ({
   sleep: (ms: number) => new Promise(resolve => setTimeout(resolve, Math.min(ms, 10)))
