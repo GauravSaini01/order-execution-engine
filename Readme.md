@@ -1,43 +1,67 @@
-# Order Execution Engine (Solana DEX Mock)
+# 🚀 Order Execution Engine Documentation
 
-This project implements a high-throughput, real-time order execution engine using Node.js, Fastify, BullMQ, and PostgreSQL. It focuses on architecture, concurrent processing, and real-time status updates via WebSockets.
+## Overview
 
-The core function is to process **Market Orders**, route them to the Decentralized Exchange (DEX) offering the best price, and stream the entire lifecycle to the client.
+This project implements a high-throughput, real-time order execution engine using Node.js, Fastify, BullMQ, and PostgreSQL. It focuses on architecture, concurrent processing, and real-time status updates via WebSockets. The core function is to process **Market Orders** by routing them to the Decentralized Exchange (DEX) offering the best price and streaming the entire lifecycle to the client dashboard.
 
 -----
 
-## Architecture and Technology Stack
+## 🌐 Deployed Application Links
+
+**LIVE DEMO:**
+
+| Service | URL | Notes |
+| :--- | :--- | :--- |
+| **Frontend Dashboard** | [https://eterna-assignment-msr8ggbmr-gaurav-sainis-projects-8476e8e0.vercel.app](https://eterna-assignment-msr8ggbmr-gaurav-sainis-projects-8476e8e0.vercel.app) | Hosted on Vercel |
+| **Backend API Base** | [https://order-execution-engine-1.onrender.com/health](https://www.google.com/search?q=https://order-execution-engine-1.onrender.com/health) | Hosted on Render (Fastify Web Service) |
+
+-----
+
+## ⚙️ 2. Architecture and Technology Stack
 
 The system employs an event-driven, layered architecture designed for scalability and failure tolerance.
 
 | Component | Technology | Responsibility |
 | :--- | :--- | :--- |
-| **API/WebSockets** | **Fastify** | Handles incoming HTTP requests and maintains WebSocket connections for real-time status streaming. |
+| **API/WebSockets** | **Fastify** | Handles incoming HTTP requests (`/api/orders`) and maintains WebSocket connections for real-time status streaming. |
 | **Queue** | **BullMQ** (with Redis) | Manages concurrent processing of orders, ensures concurrency limits, and handles exponential back-off retries. |
 | **Persistence** | **PostgreSQL** | Stores all historical order data and final execution results persistently. |
-| **Service Layer** | **OrderService**, **DexRouterService** | Implements core logic: order creation, price comparison, DEX routing, and status transitions. |
+| **Service Layer** | **OrderService**, **DexRouterService** | Implements core logic: order creation, price comparison, DEX routing (Raydium vs. Meteora Mock), and status transitions. |
 | **Worker** | **OrderWorker** | Consumes jobs from the queue and executes the asynchronous, multi-step execution flow. |
-
-The decoupled architecture ensures that the primary web server remains highly responsive while complex, time-consuming tasks (like routing and execution) are handled reliably in the background worker pool.
 
 -----
 
-## Design Decisions
+## 🎯 3. Design Decisions
 
 ### Chosen Order Type: Market Order
 
-The **Market Order** was chosen because it simplifies the initial logic by requiring immediate execution based on the best available price at the time of submission. This allowed the implementation to focus on the core requirements: **DEX Routing**, **Queue Concurrency**, **PostgreSQL Persistence**, and **WebSocket Status Streaming**, without the added complexity of continuous price monitoring required for Limit orders.
+The **Market Order** was chosen because it simplifies the initial logic by requiring immediate execution based on the best available price at the time of submission. This allowed the implementation to focus on the core requirements: **DEX Routing**, **Queue Concurrency**, **PostgreSQL Persistence**, and **WebSocket Status Streaming**.
 
 ### Extension to Other Types (Limit/Sniper)
 
 The current architecture is highly extensible for supporting other order types:
 
-  * **Limit Order:** The `OrderWorker` would be modified to check the order's limit price against the current quote (via the `DexRouterService`). If the price condition is **not** met, the job is re-queued with an extended delay (e.g., 5 minutes) instead of throwing an error. This keeps the worker focused on immediate tasks while still managing persistent orders.
-  * **Sniper Order:** This requires a new, dedicated **Monitoring Service** running outside the queue. This service would subscribe to blockchain events (e.g., a new token's liquidity pool creation). Upon detecting the target event, the monitor acts as an API client, submitting a standard **Market Order** job to the existing BullMQ queue via the `/api/orders/execute` endpoint.
+  * **Limit Order:** The `OrderWorker` would check the order's limit price. If the condition is **not** met, the job is **re-queued with an extended delay** (e.g., 5 minutes) instead of being dropped, allowing the worker to manage persistent orders.
+  * **Sniper Order:** This requires a new, dedicated **Monitoring Service** running outside the queue. This service would subscribe to blockchain events (e.g., a new token's liquidity pool creation) and submit a standard **Market Order** job to the existing BullMQ queue.
 
 -----
 
-## Setup and Running Environment
+## 🌐 4. API Documentation and Endpoints
+
+### Backend Endpoints
+
+The backend exposes the following endpoints under the base path `/api`.
+
+| Method | Endpoint | Description | Payload Example |
+| :--- | :--- | :--- | :--- |
+| **`POST`** | `/api/orders/execute` | **Submit Order.** Creates a new market order, saves it to PostgreSQL, and enqueues it for processing. | `{"type": "market", "tokenIn": "SOL", "tokenOut": "USDC", "amount": 10}` |
+| **`GET`** | `/api/orders` | **Order History.** Retrieves a list of all historical orders from the PostgreSQL database. | Returns `[{ id: 'uuid', status: 'CONFIRMED', ... }]` |
+| **`GET`** | `/health` | **Status Check.** Confirms the Fastify server is running and responsive. | Returns `{ status: "ok", timestamp: [timestamp] }` |
+| **`WS`** | `/api/orders/ws?orderId=<id>` | **Status Stream.** Establishes a WebSocket connection to receive real-time lifecycle updates. | Updates include `status` and `payload` (e.g., `txHash`). |
+
+-----
+
+## 🛠️ 5. Setup and Running Environment
 
 This project requires Node.js, Redis, and PostgreSQL. Docker is highly recommended for managing the services.
 
@@ -76,10 +100,10 @@ Ensure your `.env` file reflects the credentials used in your Docker setup:
 ```dotenv
 PORT=3000
 
-# PostgreSQL 
+# PostgreSQL (Matches docker-compose.yml defaults)
 DATABASE_URL="postgres://user:password@localhost:5432/order_engine_db"
 
-# Redis
+# Redis (Matches docker-compose.yml defaults)
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 ```
@@ -94,7 +118,7 @@ docker compose up -d
 
 ### 4\. Database Migration (Create the `orders` table)
 
-This step is mandatory to resolve the "relation "orders" does not exist" error.
+This step is **mandatory** to resolve the "relation "orders" does not exist" error.
 
 Connect to the PostgreSQL container shell:
 
@@ -139,10 +163,19 @@ Open the frontend dashboard in your browser. The Order History will now load suc
 
 -----
 
+## 🧪 6. Testing
+
 ### Running All Tests
 
 To execute the entire test suite covering unit logic and integration flow, use the standard command:
 
 ```bash
 npm run test
+```
+
+### Concurrent Processing
+
+The `order-queue` is managed by BullMQ with a configured concurrency limit (default 10). Jobs failing during execution will be automatically retried up to **3 times** using an **exponential back-off** strategy before the final `failed` status is emitted.
+
+```
 ```
