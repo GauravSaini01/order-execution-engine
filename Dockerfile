@@ -9,6 +9,7 @@ WORKDIR /home/appuser/app
 COPY --chown=appuser:appuser package*.json ./
 
 USER appuser
+
 RUN npm install
 RUN npm install --save-dev @types/node @types/pg @types/ws
 
