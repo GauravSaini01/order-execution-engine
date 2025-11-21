@@ -1,24 +1,19 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine
+
+RUN apk add --no-cache bash postgresql redis
 
 WORKDIR /usr/src/app
-
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
-FROM node:20-alpine AS production
-
-WORKDIR /usr/src/app
-
-ENV NODE_ENV=production
 
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY --from=builder /usr/src/app/dist ./dist
+COPY . .
 
-EXPOSE 3000
+RUN npm run build
 
-CMD ["node", "dist/index.js"]
+COPY entrypoint.sh /usr/src/app/entrypoint.sh
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+EXPOSE 3000 6379 5432
+
+CMD ["/usr/src/app/entrypoint.sh"]
